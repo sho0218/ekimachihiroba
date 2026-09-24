@@ -1,0 +1,6 @@
+{
+  "name": "にちなん駅まち広場",
+  "description": "日南の駅の待ち時間をもっと楽しく！チェックイン、写真・口コミ投稿、クイズ、限定デジタルカード収集、カフェで使えるクーポン、友達ランキングが楽しめる日南まち活アプリ。",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

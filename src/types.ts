@@ -16,12 +16,25 @@ export interface UserProfile {
   id: string;
   name: string;
   title: string;
+  titlePart1?: string;
+  titlePart2?: string;
   avatar: string;
   points: number;
   level: number;
   streakDays: number;
   lastCheckInDate?: string;
+  stationCheckIns?: Partial<Record<StationId, string>>;
   currentStation: StationId;
+}
+
+export interface WaitMate {
+  id: string;
+  stationId: StationId;
+  name: string;
+  avatar: string;
+  wait: string;
+  status: string;
+  isCustom?: boolean;
 }
 
 export interface ChatMessage {
@@ -122,15 +135,4 @@ export interface LeaderboardUser {
   points: number;
   postsCount: number;
   isMe?: boolean;
-}
-
-export interface IdeaSuggestion {
-  id: string;
-  category: 'reward' | 'action';
-  title: string;
-  description: string;
-  author: string;
-  votes: number;
-  hasVoted?: boolean;
-  status: 'planned' | 'reviewing' | 'popular';
 }

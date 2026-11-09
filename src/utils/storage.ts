@@ -4,9 +4,9 @@ import {
   Quest,
   DigitalCard,
   Coupon,
-  IdeaSuggestion,
   ChatMessage,
   StationId,
+  WaitMate,
 } from '../types';
 import {
   INITIAL_USER,
@@ -14,16 +14,16 @@ import {
   INITIAL_QUESTS,
   DIGITAL_CARDS,
   COUPONS,
-  INITIAL_IDEAS,
+  INITIAL_WAIT_MATES,
 } from '../data/mockData';
 
 const STORAGE_KEYS = {
   USER: 'nichinan_user_profile',
   POSTS: 'nichinan_posts',
   QUESTS: 'nichinan_quests',
-  CARDS: 'nichinan_cards',
+  CARDS: 'nichinan_cards_v2',
   COUPONS: 'nichinan_coupons',
-  IDEAS: 'nichinan_ideas',
+  WAIT_MATES: 'nichinan_waitmates',
   CHATS: 'nichinan_chats',
 };
 
@@ -43,6 +43,23 @@ export function saveUserProfile(profile: UserProfile): void {
   } catch (e) {
     console.error(e);
   }
+}
+
+export function getTodayDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getYesterdayDateString(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function loadPosts(): CommunityPost[] {
@@ -140,19 +157,25 @@ export function saveCoupons(coupons: Coupon[]): void {
   }
 }
 
-export function loadIdeas(): IdeaSuggestion[] {
+export function loadWaitMates(stationId: StationId): WaitMate[] {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.IDEAS);
-    if (data) return JSON.parse(data);
+    const data = localStorage.getItem(`${STORAGE_KEYS.WAIT_MATES}_${stationId}`);
+    if (data) {
+      const parsed: WaitMate[] = JSON.parse(data);
+      // Ensure defaults for this station are present
+      const initialForStation = INITIAL_WAIT_MATES.filter((m) => m.stationId === stationId);
+      const customOnes = parsed.filter((p) => p.isCustom);
+      return [...initialForStation, ...customOnes];
+    }
   } catch (e) {
     console.error(e);
   }
-  return INITIAL_IDEAS;
+  return INITIAL_WAIT_MATES.filter((m) => m.stationId === stationId);
 }
 
-export function saveIdeas(ideas: IdeaSuggestion[]): void {
+export function saveWaitMates(stationId: StationId, mates: WaitMate[]): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.IDEAS, JSON.stringify(ideas));
+    localStorage.setItem(`${STORAGE_KEYS.WAIT_MATES}_${stationId}`, JSON.stringify(mates));
   } catch (e) {
     console.error(e);
   }

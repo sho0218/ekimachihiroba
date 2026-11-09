@@ -4,8 +4,10 @@ import {
   StationId,
   UserProfile,
   ChatMessage,
+  WaitMate,
 } from '../types';
 import { STATIONS, CHAT_PRESETS, STAMP_OPTIONS } from '../data/mockData';
+import { getTodayDateString, loadWaitMates, saveWaitMates } from '../utils/storage';
 import {
   Train,
   Clock,
@@ -17,6 +19,9 @@ import {
   Compass,
   Sparkles,
   HelpCircle,
+  UserPlus,
+  Plus,
+  X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -43,8 +48,22 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [showStampPicker, setShowStampPicker] = useState(false);
-  const [checkedInToday, setCheckedInToday] = useState(false);
+  const todayStr = getTodayDateString();
+  const isCheckedInToday = user.stationCheckIns?.[activeStation.id] === todayStr;
   const [timeRemainingSecs, setTimeRemainingSecs] = useState(activeStation.nextTrainMins * 60);
+
+  // Fellow wait-mates state for this station
+  const [waitMates, setWaitMates] = useState<WaitMate[]>(() => loadWaitMates(activeStation.id));
+  const [isAddMateModalOpen, setIsAddMateModalOpen] = useState(false);
+  const [newMateName, setNewMateName] = useState('');
+  const [newMateAvatar, setNewMateAvatar] = useState('🎒');
+  const [newMateWait, setNewMateWait] = useState('あと15分');
+  const [newMateStatus, setNewMateStatus] = useState('カフェ中☕');
+
+  // Reload wait mates when active station changes
+  useEffect(() => {
+    setWaitMates(loadWaitMates(activeStation.id));
+  }, [activeStation.id]);
 
   // Train countdown simulation
   useEffect(() => {
@@ -59,13 +78,13 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
   const secs = timeRemainingSecs % 60;
 
   const handleCheckInClick = () => {
+    if (isCheckedInToday) return;
     confetti({
       particleCount: 60,
       spread: 70,
       origin: { y: 0.7 },
       colors: ['#f97316', '#fbbf24', '#38bdf8', '#34d399'],
     });
-    setCheckedInToday(true);
     onCheckIn();
   };
 
@@ -86,13 +105,30 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
     setShowStampPicker(false);
   };
 
-  // Mock fellow wait-mates currently at this station
-  const fellowWaitMates = [
-    { name: 'まい（日南高）', wait: 'あと12分', status: 'カフェ中☕', avatar: '🎒' },
-    { name: 'けんた', wait: 'あと12分', status: '駅舎ベンチ🪑', avatar: '🧢' },
-    { name: 'さき', wait: 'あと25分', status: '宿題中📖', avatar: '🧁' },
-    { name: 'だいき', wait: 'あと12分', status: '写真撮影中📸', avatar: '🌊' },
-  ];
+  const handleAddWaitMate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMateName.trim()) return;
+    const newMate: WaitMate = {
+      id: `wm_${Date.now()}`,
+      stationId: activeStation.id,
+      name: newMateName.trim(),
+      avatar: newMateAvatar,
+      wait: newMateWait.trim() || '列車を待機中',
+      status: newMateStatus.trim() || '待合室で待機🪑',
+      isCustom: true,
+    };
+    const updated = [newMate, ...waitMates];
+    setWaitMates(updated);
+    saveWaitMates(activeStation.id, updated);
+    setNewMateName('');
+    setIsAddMateModalOpen(false);
+    confetti({
+      particleCount: 35,
+      spread: 60,
+      origin: { y: 0.6 },
+      colors: ['#f97316', '#fbbf24', '#38bdf8'],
+    });
+  };
 
   return (
     <div className="space-y-5">
@@ -177,25 +213,26 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
               <span>日南線運行中・待合室利用可能</span>
             </div>
 
-            {/* Check-in Action Button (48px height mobile thumb zone) */}
+            {/* Check-in Action Button (1 check-in per station per day) */}
             <button
               id="check-in-station-btn"
               onClick={handleCheckInClick}
-              className={`mt-3.5 w-full min-h-[48px] py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-md active:scale-95 ${
-                checkedInToday
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-white text-orange-700 hover:bg-amber-50 active:scale-95 shadow-orange-950/20'
+              disabled={isCheckedInToday}
+              className={`mt-3.5 w-full min-h-[48px] py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center space-x-2 shadow-md ${
+                isCheckedInToday
+                  ? 'bg-emerald-600/95 text-white cursor-default ring-2 ring-emerald-400/40'
+                  : 'bg-white text-orange-700 hover:bg-amber-50 active:scale-95 shadow-orange-950/20 cursor-pointer'
               }`}
             >
-              {checkedInToday ? (
+              {isCheckedInToday ? (
                 <>
                   <CheckCircle className="w-5 h-5 text-white" />
-                  <span>チェックイン完了 (+30pt)</span>
+                  <span>{activeStation.name} チェックイン済み（また明日！）</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-5 h-5 text-amber-500 fill-amber-400" />
-                  <span>この駅にチェックイン！ (+30pt)</span>
+                  <span>{activeStation.name}にチェックイン！ (+30pt / 各駅1日1回)</span>
                 </>
               )}
             </button>
@@ -240,13 +277,24 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
                   </p>
                 </div>
               </div>
-              <span className="bg-orange-50 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full border border-orange-200">
-                {fellowWaitMates.length + (checkedInToday ? 1 : 0)}人
-              </span>
+              <div className="flex items-center space-x-1.5">
+                <button
+                  id="add-waitmate-btn"
+                  onClick={() => setIsAddMateModalOpen(true)}
+                  className="flex items-center space-x-1 text-[11px] font-bold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                  title="待ち時間の仲間を追加する"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>仲間を追加</span>
+                </button>
+                <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-0.5 rounded-full">
+                  {waitMates.length + (isCheckedInToday ? 1 : 0)}人
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">
-              {checkedInToday && (
+              {isCheckedInToday && (
                 <div className="flex items-center justify-between p-2 rounded-xl bg-orange-50/70 border border-orange-200/60 text-xs">
                   <div className="flex items-center space-x-2">
                     <span className="text-base">{user.avatar}</span>
@@ -263,15 +311,22 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
                 </div>
               )}
 
-              {fellowWaitMates.map((mate, idx) => (
+              {waitMates.map((mate) => (
                 <div
-                  key={idx}
+                  key={mate.id}
                   className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs"
                 >
                   <div className="flex items-center space-x-2">
                     <span className="text-base">{mate.avatar}</span>
                     <div>
-                      <span className="font-medium text-slate-800">{mate.name}</span>
+                      <div className="flex items-center space-x-1">
+                        <span className="font-medium text-slate-800">{mate.name}</span>
+                        {mate.isCustom && (
+                          <span className="text-[9px] bg-orange-100 text-orange-700 px-1 py-0.2 rounded font-bold">
+                            追加
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-slate-500">{mate.status}</p>
                     </div>
                   </div>
@@ -456,6 +511,148 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
           </form>
         </div>
       </div>
+
+      {/* Add Fellow Wait-Mate Modal */}
+      {isAddMateModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl relative animate-in zoom-in-95">
+            <button
+              onClick={() => setIsAddMateModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-2.5 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-xl">
+                <UserPlus className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">
+                  待ち時間の仲間を追加
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  📍 {activeStation.name} で一緒に待っている人を登録
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAddWaitMate} className="space-y-3.5">
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  ニックネーム / 肩書
+                </label>
+                <input
+                  type="text"
+                  id="add-mate-name-input"
+                  value={newMateName}
+                  onChange={(e) => setNewMateName(e.target.value)}
+                  placeholder="例: テスト終わりの高校生, カメラ旅人"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500/50 outline-none"
+                  required
+                />
+              </div>
+
+              {/* Avatar Emoji */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  アイコン（絵文字）
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {['🎒', '🧢', '🧁', '🌊', '📸', '⚾', '🌲', '🚃', '🐶', '☕', '📖', '🚲'].map((em) => (
+                    <button
+                      key={em}
+                      type="button"
+                      onClick={() => setNewMateAvatar(em)}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-base transition-all cursor-pointer ${
+                        newMateAvatar === em
+                          ? 'bg-orange-500 text-white shadow-xs scale-105'
+                          : 'bg-slate-100 hover:bg-slate-200'
+                      }`}
+                    >
+                      {em}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Wait Duration */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  待ち時間・予定
+                </label>
+                <input
+                  type="text"
+                  id="add-mate-wait-input"
+                  value={newMateWait}
+                  onChange={(e) => setNewMateWait(e.target.value)}
+                  placeholder="例: あと15分, 18:30発"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-orange-500/50 outline-none mb-1"
+                />
+                <div className="flex flex-wrap gap-1">
+                  {['あと10分', 'あと15分', 'あと25分', '次発列車'].map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setNewMateWait(opt)}
+                      className="text-[10px] bg-slate-100 hover:bg-orange-50 text-slate-600 px-2 py-0.5 rounded-md font-medium cursor-pointer"
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status / Activity */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  今の過ごし方
+                </label>
+                <input
+                  type="text"
+                  id="add-mate-status-input"
+                  value={newMateStatus}
+                  onChange={(e) => setNewMateStatus(e.target.value)}
+                  placeholder="例: カフェ中☕, 宿題中📖"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-orange-500/50 outline-none mb-1"
+                />
+                <div className="flex flex-wrap gap-1">
+                  {['カフェ中☕', '読書中📖', '駅舎ベンチ🪑', '写真撮影中📸', '宿題中✏️', '散歩中🚶'].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setNewMateStatus(s)}
+                      className="text-[10px] bg-slate-100 hover:bg-orange-50 text-slate-600 px-2 py-0.5 rounded-md font-medium cursor-pointer"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddMateModalOpen(false)}
+                  className="px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl cursor-pointer"
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="submit"
+                  id="submit-new-waitmate-btn"
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center space-x-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>仲間に追加する</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

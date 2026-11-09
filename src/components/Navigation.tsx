@@ -6,7 +6,6 @@ import {
   Sparkles,
   Ticket,
   Trophy,
-  Lightbulb,
   Menu,
   X,
   HelpCircle,
@@ -14,7 +13,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-export type NavTab = 'hub' | 'timeline' | 'quests' | 'cards' | 'coupons' | 'rankings' | 'ideas';
+export type NavTab = 'hub' | 'timeline' | 'quests' | 'cards' | 'coupons' | 'rankings';
 
 interface NavigationProps {
   activeTab: NavTab;
@@ -77,17 +76,10 @@ export const Navigation: React.FC<NavigationProps> = ({
       badge: null,
       sublabel: '友達と競う',
     },
-    {
-      id: 'ideas' as NavTab,
-      label: 'アイディア箱',
-      icon: Lightbulb,
-      badge: '提案',
-      sublabel: 'みんなの要望',
-    },
   ];
 
   // Mobile Bottom Tab Bar items (Primary 4 + 1 Menu/Dynamic Tab)
-  const isSecondaryActive = activeTab === 'coupons' || activeTab === 'rankings' || activeTab === 'ideas';
+  const isSecondaryActive = activeTab === 'coupons' || activeTab === 'rankings';
 
   const handleMobileTabClick = (tabId: NavTab) => {
     setIsMenuOpen(false);
@@ -100,9 +92,6 @@ export const Navigation: React.FC<NavigationProps> = ({
     }
     if (activeTab === 'rankings') {
       return { label: 'ランキング', icon: Trophy };
-    }
-    if (activeTab === 'ideas') {
-      return { label: 'アイディア', icon: Lightbulb };
     }
     return { label: 'メニュー', icon: Menu };
   };
@@ -314,30 +303,6 @@ export const Navigation: React.FC<NavigationProps> = ({
                     <span className="text-sm font-bold">まち活ランキング</span>
                     <p className="text-xs text-slate-500">
                       友達や市民とポイントやレベルを競おう
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-slate-400" />
-              </button>
-
-              {/* Ideas item */}
-              <button
-                id="menu-sheet-ideas"
-                onClick={() => handleMobileTabClick('ideas')}
-                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer active:scale-98 ${
-                  activeTab === 'ideas'
-                    ? 'bg-orange-50 border-orange-300 text-orange-950 font-bold'
-                    : 'bg-slate-50/80 border-slate-200/80 text-slate-800 hover:bg-orange-50/50'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center shrink-0">
-                    <Lightbulb className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold">駅まちアイディア箱</span>
-                    <p className="text-xs text-slate-500">
-                      「駅にこれが欲しい！」を提案・投票
                     </p>
                   </div>
                 </div>

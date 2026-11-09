@@ -6,9 +6,53 @@ import {
   DigitalCard,
   Coupon,
   LeaderboardUser,
-  IdeaSuggestion,
   UserProfile,
+  WaitMate,
 } from '../types';
+
+export const TITLE_PREFIXES = [
+  '飫肥の',
+  '油津の',
+  '日南線の',
+  '南郷の',
+  '北郷の',
+  '放課後の',
+  '夕暮れの',
+  '快速',
+  '青春の',
+  '気ままな',
+  '海風の',
+  '城下町の',
+  'のんびり',
+  '熱血',
+];
+
+export const TITLE_SUFFIXES = [
+  'お散歩マスター',
+  'カフェ通',
+  'トレインファン',
+  '若武者',
+  'ナビゲーター',
+  '食いしん坊',
+  'チャレンジャー',
+  '写真家',
+  'のんびり屋',
+  '探検隊',
+  '案内人',
+  '応援団長',
+];
+
+export const INITIAL_WAIT_MATES: WaitMate[] = [
+  { id: 'wm1', stationId: 'aburatsu', name: 'まい（日南高）', wait: 'あと12分', status: 'カフェ中☕', avatar: '🎒' },
+  { id: 'wm2', stationId: 'aburatsu', name: 'けんた', wait: 'あと12分', status: '駅舎ベンチ🪑', avatar: '🧢' },
+  { id: 'wm3', stationId: 'aburatsu', name: 'さき', wait: 'あと25分', status: '宿題中📖', avatar: '🧁' },
+  { id: 'wm4', stationId: 'aburatsu', name: 'だいき', wait: 'あと12分', status: '写真撮影中📸', avatar: '🌊' },
+  { id: 'wm5', stationId: 'obi', name: 'ゆうと', wait: 'あと18分', status: '城下町散策中🍡', avatar: '🏃' },
+  { id: 'wm6', stationId: 'obi', name: 'りな', wait: 'あと18分', status: '読書中📚', avatar: '👒' },
+  { id: 'wm7', stationId: 'nichinan', name: 'たくみ', wait: 'あと22分', status: '売店でお買い物🛍️', avatar: '🧢' },
+  { id: 'wm8', stationId: 'nango', name: 'みさき', wait: 'あと30分', status: '海を眺め中🌊', avatar: '🌺' },
+  { id: 'wm9', stationId: 'kitago', name: 'こうへい', wait: 'あと15分', status: '温泉帰り♨️', avatar: '🌲' },
+];
 
 export const STATIONS: StationInfo[] = [
   {
@@ -72,10 +116,13 @@ export const INITIAL_USER: UserProfile = {
   id: 'user_local_1',
   name: 'にちなん学生ライナー',
   title: '飫肥のお散歩マスター',
+  titlePart1: '飫肥の',
+  titlePart2: 'お散歩マスター',
   avatar: '🌊',
   points: 380,
   level: 4,
   streakDays: 3,
+  stationCheckIns: {},
   currentStation: 'aburatsu',
 };
 
@@ -226,16 +273,16 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'quiz_2',
     question: '宮崎県のマスコットキャラクター「みやざき犬」の3匹の名前として正しい組み合わせは？',
-    options: ['ひぃくん・むぅちゃん・かぁくん', 'ぽち・ころ・しろ', 'みや・ざき・けん'],
-    correctIndex: 0,
+    options: ['ぽち・ころ・しろ', 'ひぃくん・むぅちゃん・かぁくん', 'みや・ざき・けん'],
+    correctIndex: 1,
     explanation: '正解は「ひぃくん」「むぅちゃん」「かぁくん」！宮崎弁の「ひむか」に由来していて、日向夏やフェニックスなどのかぶりものをしています。',
     pointsReward: 30,
   },
   {
     id: 'quiz_3',
     question: '飫肥城下町の伝統グルメ「おび天」。魚のすり身に練り合わせる特徴的な食材は何？',
-    options: ['豆腐と黒砂糖', 'チーズと明太子', 'お米と味噌'],
-    correctIndex: 0,
+    options: ['チーズと明太子', 'お米と味噌', '豆腐と黒砂糖'],
+    correctIndex: 2,
     explanation: '正解は「豆腐と黒砂糖」！白身魚のすり身に国産大豆の豆腐と黒砂糖・味噌を混ぜて揚げており、ふんわり甘い独自の食感が特徴です。',
     pointsReward: 30,
   },
@@ -250,8 +297,8 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'quiz_5',
     question: '日南海岸国定公園を代表する名所「鵜戸神宮（うどじんぐう）」。本殿がある場所の特徴はどれ？',
-    options: ['太平洋に突き出た断崖の洞窟の中', '標高1,000mの山頂', '飫肥城の天守閣跡'],
-    correctIndex: 0,
+    options: ['標高1,000mの山頂', '飫肥城の天守閣跡', '太平洋に突き出た断崖の洞窟の中'],
+    correctIndex: 2,
     explanation: '正解は「断崖の洞窟の中」！波打ち際の巨大な海食洞の中に朱塗りの本殿があり、「運玉投げ」でも全国的に有名です。',
     pointsReward: 30,
   },
@@ -270,8 +317,7 @@ export const DIGITAL_CARDS: DigitalCard[] = [
     photoSourceUrl: 'https://www.kanko-miyazaki.jp/business/photo',
     flavorText: '太平洋の断崖絶壁に面した朱塗りの楼門と石段。海食洞の奥に本殿が鎮座し、亀石の枡形に運玉を投げ入れると願いが叶うと伝わる日南随一のパワースポット。',
     category: 'spot',
-    acquired: true,
-    acquiredAt: '2026/09/01',
+    acquired: false,
   },
   {
     id: 'card_2',
@@ -285,8 +331,7 @@ export const DIGITAL_CARDS: DigitalCard[] = [
     photoSourceUrl: 'https://www.kanko-miyazaki.jp/business/photo',
     flavorText: '樹齢100年以上の飫肥杉を用いて復元された堂々たる大手門。苔むす石垣と武家屋敷が立ち並び、江戸情緒を色濃く残す日南の歴史の象徴。',
     category: 'spot',
-    acquired: true,
-    acquiredAt: '2026/09/02',
+    acquired: false,
   },
   {
     id: 'card_3',
@@ -314,8 +359,7 @@ export const DIGITAL_CARDS: DigitalCard[] = [
     photoSourceUrl: 'https://www.kanko-miyazaki.jp/business/photo',
     flavorText: '飫肥杉の運搬を目的に飫肥藩が開削した歴史ある運河。明治期架橋のアーチ型石橋「堀川橋」や油津赤レンガ館が佇む、情緒あふれる日南の憩いの景観。',
     category: 'spot',
-    acquired: true,
-    acquiredAt: '2026/09/02',
+    acquired: false,
   },
   {
     id: 'card_5',
@@ -357,8 +401,7 @@ export const DIGITAL_CARDS: DigitalCard[] = [
     photoSourceUrl: 'https://www.kanko-miyazaki.jp/business/photo',
     flavorText: '雄大な太平洋とリアス式海岸が織りなす大自然のパノラマ。海沿いを走るJR日南線の車窓からも広がる、南国宮崎屈指のシーサイドビュー。',
     category: 'nature',
-    acquired: true,
-    acquiredAt: '2026/08/30',
+    acquired: false,
   },
   {
     id: 'card_8',
@@ -560,49 +603,6 @@ export const LEADERBOARD_USERS: LeaderboardUser[] = [
     avatar: '⚾',
     points: 290,
     postsCount: 5,
-  },
-];
-
-export const INITIAL_IDEAS: IdeaSuggestion[] = [
-  {
-    id: 'idea_1',
-    category: 'reward',
-    title: '放課後カフェの学生ポテト＆ドリンクセット割引',
-    description: '日南駅や油津駅の近くで、テスト帰りや部活終わりに友達と寄り道したくなるお得なクーポンがほしい！',
-    author: 'みく（高校生）',
-    votes: 42,
-    hasVoted: true,
-    status: 'popular',
-  },
-  {
-    id: 'idea_2',
-    category: 'action',
-    title: '「駅の待ち時間フォト選手権」の月替わりテーマ',
-    description: '「今日の夕焼け」「ホームの黄色い列車」「日南線の駅名看板」などテーマを決めて投稿し合うと競えて楽しそう！',
-    author: 'タクヤ',
-    votes: 35,
-    hasVoted: false,
-    status: 'planned',
-  },
-  {
-    id: 'idea_3',
-    category: 'reward',
-    title: '日南限定デジタルカードのコンプリート記念称号＆特製待ち受け',
-    description: '全10枚のカードを集めた人だけがもらえる特別なデジタル認定証とみやざき犬の限定スマホ壁紙がほしい！',
-    author: 'アヤネ',
-    votes: 29,
-    hasVoted: false,
-    status: 'reviewing',
-  },
-  {
-    id: 'idea_4',
-    category: 'action',
-    title: '待ち時間マッチング（同じ列車に乗る仲間探し）',
-    description: '「18:15発乗る人挙手🙋」ボタンで、同じ待合室にいる人とゆるくリアクションし合えたら待ち時間が寂しくない！',
-    author: 'しゅん',
-    votes: 38,
-    hasVoted: true,
-    status: 'popular',
   },
 ];
 

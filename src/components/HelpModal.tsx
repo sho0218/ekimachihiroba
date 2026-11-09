@@ -32,7 +32,7 @@ const FAQ_LIST: FaqItem[] = [
   },
   {
     q: 'ポイントはどうやって貯めるの？',
-    a: '「駅チェックイン（+30pt）」「待合室チャット（+10pt）」「写真・おすすめの口コミ投稿（+50pt）」「日南ご当地クイズ（+15〜50pt）」「アイディア箱への提案（+20pt）」など、アプリを使うだけでどんどん貯まります！',
+    a: '「駅チェックイン（各駅1日1回・+30pt）」「待合室チャット（+10pt）」「写真・おすすめの口コミ投稿（+50pt）」「日南ご当地クイズ（+15〜50pt）」など、アプリを使うだけでどんどん貯まります！',
   },
   {
     q: 'クーポンはどうやって使うの？',
@@ -43,8 +43,8 @@ const FAQ_LIST: FaqItem[] = [
     a: '100ptで1回引けるデジタルコレクションです。「海幸山幸」や「みやざき犬」「鵜戸神宮」など日南の名所・名物が美麗カードになっています。コンプリートを目指しましょう！',
   },
   {
-    q: '欲しいご褒美や機能があるときは？',
-    a: '画面上部の「アイディア箱」タブから、「こんなクーポンが欲しい」「こんな行動でポイントがほしい」と自由に提案・投票できます！みんなの声でアプリを育てていきましょう。',
+    q: '待ち時間の仲間や称号はどうやって設定する？',
+    a: '「駅待ち」タブで同じ駅にいる仲間を自由に追加できます！またプロフィール設定から2つの一言（例:「飫肥の」×「お散歩マスター」）を組み合わせて自分だけのオリジナル称号を作れます。',
   },
 ];
 
@@ -261,11 +261,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({
           <button
             onClick={() => {
               onClose();
-              if (onNavigateToTab) onNavigateToTab('ideas');
+              if (onNavigateToTab) onNavigateToTab('quests');
             }}
             className="text-xs font-bold text-orange-600 hover:text-orange-700 underline underline-offset-2 cursor-pointer"
           >
-            💡 アイディア箱で要望を出す
+            🧠 日南クイズに挑戦する
           </button>
           <button
             id="help-modal-ok-btn"

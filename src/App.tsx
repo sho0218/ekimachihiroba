@@ -11,10 +11,9 @@ import {
   Quest,
   DigitalCard,
   Coupon,
-  IdeaSuggestion,
   ChatMessage,
 } from './types';
-import { STATIONS, DIGITAL_CARDS, INITIAL_USER, INITIAL_POSTS, INITIAL_QUESTS, COUPONS, INITIAL_IDEAS } from './data/mockData';
+import { STATIONS, DIGITAL_CARDS, INITIAL_USER, INITIAL_POSTS, INITIAL_QUESTS, COUPONS } from './data/mockData';
 import {
   loadUserProfile,
   saveUserProfile,
@@ -26,10 +25,10 @@ import {
   saveDigitalCards,
   loadCoupons,
   saveCoupons,
-  loadIdeas,
-  saveIdeas,
   loadChats,
   saveChats,
+  getTodayDateString,
+  getYesterdayDateString,
 } from './utils/storage';
 
 import { Header } from './components/Header';
@@ -40,7 +39,6 @@ import { QuestQuizView } from './components/QuestQuizView';
 import { CardGachaView } from './components/CardGachaView';
 import { CouponShopView } from './components/CouponShopView';
 import { LeaderboardView } from './components/LeaderboardView';
-import { IdeaBoxView } from './components/IdeaBoxView';
 import { ProfileModal } from './components/ProfileModal';
 import { HelpModal } from './components/HelpModal';
 import { Sparkles, Heart, HelpCircle } from 'lucide-react';
@@ -52,7 +50,6 @@ export default function App() {
   const [quests, setQuests] = useState<Quest[]>(loadQuests);
   const [cards, setCards] = useState<DigitalCard[]>(loadDigitalCards);
   const [coupons, setCoupons] = useState<Coupon[]>(loadCoupons);
-  const [ideas, setIdeas] = useState<IdeaSuggestion[]>(loadIdeas);
   const [activeStationId, setActiveStationId] = useState<StationId>(user.currentStation || 'aburatsu');
   const [chats, setChats] = useState<ChatMessage[]>(() => loadChats(activeStationId));
 
@@ -94,14 +91,37 @@ export default function App() {
     }
   };
 
-  // Station Check-In handler
-  const handleCheckIn = () => {
+  // Station Check-In handler (Once per day per station)
+  const handleCheckIn = (): boolean => {
+    const todayStr = getTodayDateString();
+
+    // Check if user already checked in at this specific station today
+    if (user.stationCheckIns?.[activeStationId] === todayStr) {
+      showToast(`本日はすでに${currentStation.name}にチェックイン済みです（各駅1日1回）`);
+      return false;
+    }
+
+    const yesterdayStr = getYesterdayDateString();
+    let nextStreak = user.streakDays;
+    if (user.lastCheckInDate === yesterdayStr) {
+      nextStreak += 1;
+    } else if (!user.lastCheckInDate) {
+      nextStreak = Math.max(1, user.streakDays);
+    } else if (user.lastCheckInDate !== todayStr) {
+      nextStreak = 1;
+    }
+
     addPoints(30, `${currentStation.name} にチェックイン`);
     setUser((prev) => {
-      const updated = {
+      const updated: UserProfile = {
         ...prev,
-        streakDays: prev.streakDays + 1,
+        streakDays: nextStreak,
+        lastCheckInDate: todayStr,
         currentStation: activeStationId,
+        stationCheckIns: {
+          ...(prev.stationCheckIns || {}),
+          [activeStationId]: todayStr,
+        },
       };
       saveUserProfile(updated);
       return updated;
@@ -118,6 +138,8 @@ export default function App() {
       saveQuests(next);
       return next;
     });
+
+    return true;
   };
 
   // Send Chat message
@@ -287,40 +309,6 @@ export default function App() {
     showToast('クーポンを利用済みにしました！ご利用ありがとうございました。');
   };
 
-  // Vote on Idea
-  const handleVoteIdea = (ideaId: string) => {
-    setIdeas((prev) => {
-      const next = prev.map((idea) => {
-        if (idea.id === ideaId) {
-          const hasVoted = !idea.hasVoted;
-          return {
-            ...idea,
-            hasVoted,
-            votes: hasVoted ? idea.votes + 1 : idea.votes - 1,
-          };
-        }
-        return idea;
-      });
-      saveIdeas(next);
-      return next;
-    });
-  };
-
-  // Add new Idea
-  const handleAddIdea = (newIdeaData: Omit<IdeaSuggestion, 'id' | 'votes' | 'hasVoted' | 'status'>) => {
-    const newIdea: IdeaSuggestion = {
-      ...newIdeaData,
-      id: `idea_${Date.now()}`,
-      votes: 1,
-      hasVoted: true,
-      status: 'reviewing',
-    };
-    const nextIdeas = [newIdea, ...ideas];
-    setIdeas(nextIdeas);
-    saveIdeas(nextIdeas);
-    addPoints(20, 'アイディア提案');
-  };
-
   // Reset demo data
   const handleResetData = () => {
     localStorage.clear();
@@ -329,7 +317,6 @@ export default function App() {
     setQuests(INITIAL_QUESTS);
     setCards(DIGITAL_CARDS);
     setCoupons(COUPONS);
-    setIdeas(INITIAL_IDEAS);
     setActiveStationId('aburatsu');
     setChats(loadChats('aburatsu'));
     showToast('デモデータを初期状態にリセットしました');
@@ -418,15 +405,6 @@ export default function App() {
         {activeTab === 'rankings' && (
           <LeaderboardView user={user} />
         )}
-
-        {activeTab === 'ideas' && (
-          <IdeaBoxView
-            ideas={ideas}
-            onVoteIdea={handleVoteIdea}
-            onAddIdea={handleAddIdea}
-            user={user}
-          />
-        )}
       </main>
 
       {/* Desktop Floating Help Button (On mobile, Help is integrated into Header and Bottom Menu) */}
@@ -457,12 +435,6 @@ export default function App() {
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span>使い方・ヘルプ</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('ideas')}
-              className="hover:text-orange-600 font-semibold cursor-pointer"
-            >
-              アイディアを提案
             </button>
             <button
               onClick={() => setIsProfileModalOpen(true)}

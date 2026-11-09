@@ -22,13 +22,37 @@ interface QuestQuizViewProps {
   onAddPoints: (points: number) => void;
 }
 
+// Randomize the 3 options and adjust correctIndex so correct answer is at a random position
+function shuffleQuizOptions(q: QuizQuestion): QuizQuestion {
+  const paired = q.options.map((opt, i) => ({
+    text: opt,
+    isCorrect: i === q.correctIndex,
+  }));
+  // Fisher-Yates shuffle
+  for (let i = paired.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [paired[i], paired[j]] = [paired[j], paired[i]];
+  }
+  const shuffledOptions = paired.map((p) => p.text);
+  const newCorrectIndex = paired.findIndex((p) => p.isCorrect);
+
+  return {
+    ...q,
+    options: shuffledOptions,
+    correctIndex: newCorrectIndex,
+  };
+}
+
 export const QuestQuizView: React.FC<QuestQuizViewProps> = ({
   quests,
   onCompleteQuest,
   user,
   onAddPoints,
 }) => {
-  // Quiz State
+  // Quiz State (with options randomized)
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>(() =>
+    QUIZ_QUESTIONS.map(shuffleQuizOptions)
+  );
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
@@ -36,7 +60,7 @@ export const QuestQuizView: React.FC<QuestQuizViewProps> = ({
   const [quizFinished, setQuizFinished] = useState(false);
   const [pointsEarnedInQuiz, setPointsEarnedInQuiz] = useState(0);
 
-  const currentQ = QUIZ_QUESTIONS[currentQuizIndex];
+  const currentQ = quizQuestions[currentQuizIndex];
 
   const handleSelectOption = (idx: number) => {
     if (isAnswerChecked) return;
@@ -55,7 +79,7 @@ export const QuestQuizView: React.FC<QuestQuizViewProps> = ({
   };
 
   const handleNextQuiz = () => {
-    if (currentQuizIndex < QUIZ_QUESTIONS.length - 1) {
+    if (currentQuizIndex < quizQuestions.length - 1) {
       setCurrentQuizIndex((prev) => prev + 1);
       setSelectedOption(null);
       setIsAnswerChecked(false);
@@ -74,6 +98,8 @@ export const QuestQuizView: React.FC<QuestQuizViewProps> = ({
   };
 
   const handleRestartQuiz = () => {
+    // Re-shuffle options randomly when restarting
+    setQuizQuestions(QUIZ_QUESTIONS.map(shuffleQuizOptions));
     setCurrentQuizIndex(0);
     setSelectedOption(null);
     setIsAnswerChecked(false);
@@ -123,7 +149,7 @@ export const QuestQuizView: React.FC<QuestQuizViewProps> = ({
 
           <div className="text-right">
             <span className="text-xs font-bold text-slate-400">
-              問題 {currentQuizIndex + 1} / {QUIZ_QUESTIONS.length}
+              問題 {currentQuizIndex + 1} / {quizQuestions.length}
             </span>
           </div>
         </div>
@@ -203,7 +229,7 @@ export const QuestQuizView: React.FC<QuestQuizViewProps> = ({
                     className="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
                   >
                     <span>
-                      {currentQuizIndex === QUIZ_QUESTIONS.length - 1
+                      {currentQuizIndex === quizQuestions.length - 1
                         ? '結果を見る'
                         : '次の問題へ'}
                     </span>
@@ -224,7 +250,7 @@ export const QuestQuizView: React.FC<QuestQuizViewProps> = ({
                 クイズ終了！おつかれさまでした！
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                スコア: <span className="font-bold text-orange-600 text-sm">{quizScore} / {QUIZ_QUESTIONS.length} 問正解</span>
+                スコア: <span className="font-bold text-orange-600 text-sm">{quizScore} / {quizQuestions.length} 問正解</span>
               </p>
             </div>
 
@@ -236,7 +262,7 @@ export const QuestQuizView: React.FC<QuestQuizViewProps> = ({
             </div>
 
             <p className="text-xs text-slate-600 max-w-sm mx-auto">
-              {quizScore === QUIZ_QUESTIONS.length
+              {quizScore === quizQuestions.length
                 ? 'すごい！あなたは正真正銘の日南マスターです！🎉'
                 : '日南のことをもっと知って、次の列車待ち時間も楽しもう！'}
             </p>

@@ -16,6 +16,7 @@ import {
   Smile,
   Compass,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -27,6 +28,7 @@ interface StationWaitHubProps {
   messages: ChatMessage[];
   onSendMessage: (text: string, stamp?: string) => void;
   onNavigateToTab: (tab: any) => void;
+  onOpenHelp?: () => void;
 }
 
 export const StationWaitHub: React.FC<StationWaitHubProps> = ({
@@ -37,6 +39,7 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
   messages,
   onSendMessage,
   onNavigateToTab,
+  onOpenHelp,
 }) => {
   const [inputText, setInputText] = useState('');
   const [showStampPicker, setShowStampPicker] = useState(false);
@@ -94,33 +97,52 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
   return (
     <div className="space-y-5">
       {/* Station Selector Bar */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
-        <span className="text-xs font-bold text-slate-500 shrink-0 flex items-center pl-1">
-          <Compass className="w-3.5 h-3.5 mr-1 text-orange-500" />
-          駅を選ぶ:
-        </span>
-        {STATIONS.map((station) => (
+      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center space-x-2 shrink-0">
+          <span className="text-xs font-bold text-slate-500 shrink-0 flex items-center pl-1">
+            <Compass className="w-3.5 h-3.5 mr-1 text-orange-500" />
+            駅を選ぶ:
+          </span>
+          {STATIONS.map((station) => (
+            <button
+              key={station.id}
+              id={`station-selector-${station.id}`}
+              onClick={() => onSelectStation(station.id)}
+              className={`px-3.5 py-2 min-h-[40px] rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer active:scale-95 ${
+                activeStation.id === station.id
+                  ? 'bg-orange-600 text-white shadow-sm ring-2 ring-orange-400/40'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:border-orange-300'
+              }`}
+            >
+              {station.name}
+            </button>
+          ))}
+        </div>
+
+        {onOpenHelp && (
           <button
-            key={station.id}
-            id={`station-selector-${station.id}`}
-            onClick={() => onSelectStation(station.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              activeStation.id === station.id
-                ? 'bg-orange-600 text-white shadow-xs'
-                : 'bg-white text-slate-600 border border-slate-200 hover:border-orange-300'
-            }`}
+            id="hub-help-guide-btn"
+            onClick={onOpenHelp}
+            className="shrink-0 flex items-center space-x-1.5 text-xs font-bold text-orange-700 bg-orange-100/90 hover:bg-orange-200 border border-orange-300/80 px-3.5 py-2 min-h-[40px] rounded-full transition-all cursor-pointer shadow-2xs active:scale-95 ml-auto"
           >
-            {station.name}
+            <HelpCircle className="w-4 h-4 text-orange-600" />
+            <span>遊び方ガイド</span>
           </button>
-        ))}
+        )}
       </div>
 
       {/* Hero Station Countdown Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-orange-500 via-amber-500 to-yellow-500 text-white p-5 sm:p-7 shadow-lg shadow-orange-500/15">
+      <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-orange-500 via-amber-500 to-yellow-500 text-white p-5 sm:p-7 shadow-lg shadow-orange-500/20">
         {/* Background decorative circles & train silhouette */}
         <div className="absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none" />
         <div className="absolute top-2 right-4 text-7xl opacity-10 select-none pointer-events-none">
           🚃
+        </div>
+
+        {/* 50-char catchphrase banner */}
+        <div className="relative z-10 mb-3 inline-flex items-center space-x-1.5 bg-black/25 backdrop-blur-xs px-3 py-1 rounded-full text-[11px] font-bold text-amber-200">
+          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <span>待ち時間をまちの思い出に！日南線でつながる、集める、楽しむ地域コミュニティ</span>
         </div>
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
@@ -136,43 +158,43 @@ export const StationWaitHub: React.FC<StationWaitHubProps> = ({
                 {activeStation.kana}
               </span>
             </h1>
-            <p className="text-xs sm:text-sm text-amber-50/90 mt-1 max-w-lg">
+            <p className="text-xs sm:text-sm text-amber-50/90 mt-1 max-w-lg leading-relaxed">
               {activeStation.description}
             </p>
           </div>
 
           {/* Countdown timer module */}
-          <div className="bg-black/25 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/20 text-center shrink-0 min-w-[210px]">
-            <div className="text-[11px] font-medium text-amber-200 flex items-center justify-center gap-1 mb-1">
+          <div className="bg-black/30 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/20 text-center shrink-0 w-full sm:w-auto sm:min-w-[220px]">
+            <div className="text-[11px] font-semibold text-amber-200 flex items-center justify-center gap-1 mb-1">
               <Clock className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
               <span>次の列車まで（目安）</span>
             </div>
             <div className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-white drop-shadow-xs">
               {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
             </div>
-            <div className="text-[11px] text-white/80 mt-1 flex items-center justify-center gap-1.5">
+            <div className="text-[11px] text-white/85 mt-1 flex items-center justify-center gap-1.5 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               <span>日南線運行中・待合室利用可能</span>
             </div>
 
-            {/* Check-in Action Button */}
+            {/* Check-in Action Button (48px height mobile thumb zone) */}
             <button
               id="check-in-station-btn"
               onClick={handleCheckInClick}
-              className={`mt-3 w-full py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-md ${
+              className={`mt-3.5 w-full min-h-[48px] py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-md active:scale-95 ${
                 checkedInToday
                   ? 'bg-emerald-500 text-white'
-                  : 'bg-white text-orange-700 hover:bg-amber-50 active:scale-95'
+                  : 'bg-white text-orange-700 hover:bg-amber-50 active:scale-95 shadow-orange-950/20'
               }`}
             >
               {checkedInToday ? (
                 <>
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle className="w-5 h-5 text-white" />
                   <span>チェックイン完了 (+30pt)</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <Sparkles className="w-5 h-5 text-amber-500 fill-amber-400" />
                   <span>この駅にチェックイン！ (+30pt)</span>
                 </>
               )}

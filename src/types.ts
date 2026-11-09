@@ -92,6 +92,9 @@ export interface DigitalCard {
   category: 'spot' | 'train' | 'gourmet' | 'character' | 'nature';
   acquired: boolean;
   acquiredAt?: string;
+  photoCredit?: string;
+  photoSourceUrl?: string;
+  fallbackUrl?: string;
 }
 
 export interface Coupon {

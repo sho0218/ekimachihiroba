@@ -42,7 +42,8 @@ import { CouponShopView } from './components/CouponShopView';
 import { LeaderboardView } from './components/LeaderboardView';
 import { IdeaBoxView } from './components/IdeaBoxView';
 import { ProfileModal } from './components/ProfileModal';
-import { Sparkles, Heart } from 'lucide-react';
+import { HelpModal } from './components/HelpModal';
+import { Sparkles, Heart, HelpCircle } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('hub');
@@ -57,6 +58,7 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   // Sync station chats when station changes
   useEffect(() => {
@@ -340,9 +342,9 @@ export default function App() {
     <div className="min-h-screen bg-amber-50/30 text-slate-800 flex flex-col antialiased">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-16 right-4 z-50 bg-slate-900/90 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-amber-400/40 text-xs font-bold flex items-center space-x-2 animate-in slide-in-from-top-3">
-          <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
-          <span>{toastMessage}</span>
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 sm:left-auto sm:right-4 sm:translate-x-0 z-50 bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-amber-400/40 text-xs font-bold flex items-center space-x-2 animate-in slide-in-from-top-3 max-w-[90%] sm:max-w-md">
+          <Sparkles className="w-4 h-4 text-amber-400 animate-spin shrink-0" />
+          <span className="truncate">{toastMessage}</span>
         </div>
       )}
 
@@ -351,17 +353,20 @@ export default function App() {
         user={user}
         activeStation={currentStation}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        onOpenHelpModal={() => setIsHelpModalOpen(true)}
       />
 
-      {/* Navigation */}
+      {/* Navigation (Mobile Bottom Bar + Desktop Top Bar) */}
       <Navigation
         activeTab={activeTab}
         onTabChange={setActiveTab}
         unclaimedQuestsCount={unclaimedQuestsCount}
+        onOpenHelpModal={() => setIsHelpModalOpen(true)}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-4 py-5">
+      <main className="flex-1 max-w-md sm:max-w-2xl md:max-w-5xl w-full mx-auto px-3 sm:px-4 pt-3 sm:pt-5 pb-24 md:pb-12">
         {activeTab === 'hub' && (
           <StationWaitHub
             activeStation={currentStation}
@@ -371,6 +376,7 @@ export default function App() {
             messages={chats}
             onSendMessage={handleSendMessage}
             onNavigateToTab={setActiveTab}
+            onOpenHelp={() => setIsHelpModalOpen(true)}
           />
         )}
 
@@ -423,8 +429,20 @@ export default function App() {
         )}
       </main>
 
+      {/* Desktop Floating Help Button (On mobile, Help is integrated into Header and Bottom Menu) */}
+      <button
+        id="floating-help-btn"
+        onClick={() => setIsHelpModalOpen(true)}
+        className="hidden md:flex fixed bottom-6 right-6 z-40 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-orange-600/30 transition-all items-center space-x-1.5 font-bold text-xs cursor-pointer border-2 border-white"
+        title="使い方・ヘルプガイド"
+        aria-label="使い方・ヘルプガイドを開く"
+      >
+        <HelpCircle className="w-4 h-4 text-white" />
+        <span>使い方・ヘルプ</span>
+      </button>
+
       {/* Footer */}
-      <footer className="border-t border-amber-100/80 bg-white/60 py-6 mt-8">
+      <footer className="hidden md:block border-t border-amber-100/80 bg-white/60 py-6 mt-8">
         <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
           <div className="flex items-center space-x-2">
             <span className="font-extrabold text-slate-800">にちなん駅まち広場</span>
@@ -432,6 +450,14 @@ export default function App() {
             <span>日南市×JR日南線 まち活＆ご褒美コミュニティ</span>
           </div>
           <div className="flex items-center space-x-4">
+            <button
+              id="footer-help-btn"
+              onClick={() => setIsHelpModalOpen(true)}
+              className="hover:text-orange-600 font-semibold cursor-pointer flex items-center space-x-1"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>使い方・ヘルプ</span>
+            </button>
             <button
               onClick={() => setActiveTab('ideas')}
               className="hover:text-orange-600 font-semibold cursor-pointer"
@@ -470,6 +496,13 @@ export default function App() {
           onResetData={handleResetData}
         />
       )}
+
+      {/* Help & Guide Modal */}
+      <HelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+        onNavigateToTab={(tab) => setActiveTab(tab)}
+      />
     </div>
   );
 }

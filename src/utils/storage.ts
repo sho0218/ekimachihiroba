@@ -48,7 +48,16 @@ export function saveUserProfile(profile: UserProfile): void {
 export function loadPosts(): CommunityPost[] {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.POSTS);
-    if (data) return JSON.parse(data);
+    if (data) {
+      const parsed: CommunityPost[] = JSON.parse(data);
+      return parsed.map((post) => {
+        const initial = INITIAL_POSTS.find((p) => p.id === post.id);
+        if (initial && post.imageUrl?.includes('unsplash.com')) {
+          return { ...post, imageUrl: initial.imageUrl, content: initial.content };
+        }
+        return post;
+      });
+    }
   } catch (e) {
     console.error(e);
   }
@@ -84,7 +93,21 @@ export function saveQuests(quests: Quest[]): void {
 export function loadDigitalCards(): DigitalCard[] {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.CARDS);
-    if (data) return JSON.parse(data);
+    if (data) {
+      const parsed: DigitalCard[] = JSON.parse(data);
+      // Merge with latest authentic Nichinan card definitions (images, titles, credits)
+      return DIGITAL_CARDS.map((masterCard) => {
+        const saved = parsed.find((p) => p.id === masterCard.id);
+        if (saved) {
+          return {
+            ...masterCard,
+            acquired: saved.acquired,
+            acquiredAt: saved.acquiredAt,
+          };
+        }
+        return masterCard;
+      });
+    }
   } catch (e) {
     console.error(e);
   }

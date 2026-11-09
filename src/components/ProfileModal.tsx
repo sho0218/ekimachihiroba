@@ -29,6 +29,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [avatar, setAvatar] = useState(user.avatar);
   const [title, setTitle] = useState(user.title);
   const [savedMessage, setSavedMessage] = useState(false);
+  const [isConfirmingReset, setIsConfirmingReset] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,19 +155,37 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm('デモデータを初期状態にリセットしますか？')) {
-                  onResetData();
-                  onClose();
-                }
-              }}
-              className="text-[11px] text-slate-400 hover:text-red-500 flex items-center gap-1"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>データをリセット</span>
-            </button>
+            {isConfirmingReset ? (
+              <div className="flex items-center space-x-1.5 bg-red-50 p-1.5 rounded-xl border border-red-200">
+                <span className="text-[10px] text-red-700 font-bold">リセットしますか？</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onResetData();
+                    onClose();
+                  }}
+                  className="px-2 py-0.5 rounded-lg bg-red-600 text-white font-bold text-[10px] hover:bg-red-700 cursor-pointer"
+                >
+                  実行
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmingReset(false)}
+                  className="px-1.5 py-0.5 rounded-lg bg-slate-200 text-slate-700 font-bold text-[10px] hover:bg-slate-300 cursor-pointer"
+                >
+                  取消
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsConfirmingReset(true)}
+                className="text-[11px] text-slate-400 hover:text-red-500 flex items-center gap-1 cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>データをリセット</span>
+              </button>
+            )}
 
             <div className="flex items-center space-x-2">
               <button

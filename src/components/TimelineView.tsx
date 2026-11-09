@@ -22,28 +22,36 @@ interface TimelineViewProps {
 
 const PRESET_IMAGES = [
   {
-    label: '夕暮れの日南海岸',
-    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+    label: '日南海岸・波と水平線',
+    url: '/images/cards/card_nichinan_coast.jpg',
   },
   {
-    label: 'みやざき犬マスコット',
-    url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80',
+    label: '飫肥名物・揚げたておび天',
+    url: '/images/cards/card_obiten.jpg',
   },
   {
-    label: '揚げたておび天',
-    url: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80',
+    label: '油津駅・カープ赤駅舎',
+    url: '/images/cards/card_aburatsu_station.jpg',
   },
   {
-    label: '油津赤レンガ館',
-    url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
+    label: '鵜戸神宮・本殿と奇岩霊場',
+    url: '/images/cards/card_udo_shrine.jpg',
   },
   {
-    label: '日南線の黄色い列車',
-    url: 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=800&q=80',
+    label: '飫肥城大手門・城下町',
+    url: '/images/cards/card_obi_castle.jpg',
   },
   {
-    label: '飫肥城下町のカフェ',
-    url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
+    label: '堀川運河・石橋と歴史の風情',
+    url: '/images/cards/card_horikawa_canal.jpg',
+  },
+  {
+    label: '日南海岸フェニックスロード',
+    url: '/images/cards/card_nichinan_palms.jpg',
+  },
+  {
+    label: '坂元棚田・日本の棚田百選',
+    url: '/images/cards/card_sakamoto_tanada.jpg',
   },
 ];
 
@@ -439,6 +447,16 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           </div>
         </div>
       )}
+      {/* Mobile Floating Action Button (FAB) for quick photo posting */}
+      <button
+        id="mobile-fab-create-post"
+        onClick={() => setIsModalOpen(true)}
+        className="fixed bottom-20 right-4 sm:hidden z-30 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white p-3.5 rounded-full shadow-xl shadow-orange-600/35 border-2 border-white flex items-center justify-center cursor-pointer transition-all"
+        title="写真・口コミを投稿"
+        aria-label="写真・口コミを投稿する"
+      >
+        <Plus className="w-5 h-5 text-white" />
+      </button>
     </div>
   );
 };

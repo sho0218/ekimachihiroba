@@ -29,6 +29,9 @@ export const CouponShopView: React.FC<CouponShopViewProps> = ({
   const [useCountdown, setUseCountdown] = useState<number>(15 * 60); // 15 mins
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [isConfirmingUse, setIsConfirmingUse] = useState(false);
+
   const filteredCoupons = coupons.filter((cp) => {
     if (filterCategory === 'all') return true;
     if (filterCategory === 'unlocked') return cp.isUnlocked && !cp.isUsed;
@@ -37,9 +40,11 @@ export const CouponShopView: React.FC<CouponShopViewProps> = ({
 
   const handleUnlock = (coupon: Coupon) => {
     if (user.points < coupon.costPoints) {
-      alert('ポイントが足りません！駅待ちクイズや写真投稿でポイントをためてね。');
+      setUnlockError('ポイントが足りません！駅待ちクイズや写真投稿でポイントをためてね。');
+      setTimeout(() => setUnlockError(null), 4000);
       return;
     }
+    setUnlockError(null);
     onUnlockCoupon(coupon.id);
     confetti({
       particleCount: 50,
@@ -50,18 +55,18 @@ export const CouponShopView: React.FC<CouponShopViewProps> = ({
 
   const handleOpenUseModal = (coupon: Coupon) => {
     setActiveModalCoupon(coupon);
+    setIsConfirmingUse(false);
     setUseCountdown(15 * 60);
   };
 
   const handleConfirmUse = (couponId: string) => {
-    if (confirm('店舗スタッフの前で「利用済みにする」を押しますか？一度使用すると再利用はできません。')) {
-      onUseCoupon(couponId);
-      setActiveModalCoupon(null);
-      confetti({
-        particleCount: 40,
-        spread: 50,
-      });
-    }
+    onUseCoupon(couponId);
+    setActiveModalCoupon(null);
+    setIsConfirmingUse(false);
+    confetti({
+      particleCount: 40,
+      spread: 50,
+    });
   };
 
   const mins = Math.floor(useCountdown / 60);
@@ -89,6 +94,14 @@ export const CouponShopView: React.FC<CouponShopViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Error notification banner if insufficient points */}
+      {unlockError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+          <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+          <span>{unlockError}</span>
+        </div>
+      )}
 
       {/* Filter Tabs */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
@@ -255,19 +268,46 @@ export const CouponShopView: React.FC<CouponShopViewProps> = ({
             </div>
 
             <div className="space-y-2">
-              <button
-                id="confirm-use-coupon-btn"
-                onClick={() => handleConfirmUse(activeModalCoupon.id)}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold text-xs text-white transition-all shadow-md active:scale-95 cursor-pointer"
-              >
-                スタッフ確認済み（使用済みにする）
-              </button>
-              <button
-                onClick={() => setActiveModalCoupon(null)}
-                className="w-full py-1.5 text-xs text-slate-500 hover:text-slate-700 font-medium"
-              >
-                閉じる（あとで使う）
-              </button>
+              {isConfirmingUse ? (
+                <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-left space-y-2">
+                  <p className="text-xs font-bold text-amber-900">
+                    ⚠️ 店舗スタッフの目の前でタップしてください。一度確定すると再利用はできません。
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsConfirmingUse(false)}
+                      className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-xs text-slate-700 cursor-pointer"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      type="button"
+                      id="confirm-use-final-btn"
+                      onClick={() => handleConfirmUse(activeModalCoupon.id)}
+                      className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold text-xs text-white cursor-pointer shadow-md active:scale-95"
+                    >
+                      利用を確定する
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    id="confirm-use-coupon-btn"
+                    onClick={() => setIsConfirmingUse(true)}
+                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold text-xs text-white transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    スタッフ確認済み（使用済みにする）
+                  </button>
+                  <button
+                    onClick={() => setActiveModalCoupon(null)}
+                    className="w-full py-1.5 text-xs text-slate-500 hover:text-slate-700 font-medium cursor-pointer"
+                  >
+                    閉じる（あとで使う）
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,15 +1,29 @@
 @import "tailwindcss";
 
 @layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
   body {
     font-family: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Maru Gothic ProN", sans-serif;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+/* Safe area padding utilities for mobile devices */
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
 }
 
 /* Custom scrollbar for clean horizontal and vertical scrolling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
